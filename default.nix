@@ -1,15 +1,15 @@
 let
-  # Pin Nixpkgs for stability
+  # Import a fixed Nixpkgs version for reproducibility
   pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/976fa3369d722e76f37c77493d99829540d43845.tar.gz") {};
 
-  # Define Python 3.9 environment with necessary packages
+  # Define Python 3.9 environment with required packages (excluding pyogrio)
   pythonEnv = pkgs.python39.withPackages (ps: with ps; [
     certifi
     contourpy
     cycler
     fonttools
     geopandas
-    ps.importlib-resources  # Corrected package name for Nix
+    importlib-resources
     kiwisolver
     laspy
     matplotlib
@@ -17,7 +17,6 @@ let
     packaging
     pandas
     pillow
-    pyogrio
     pyparsing
     pyproj
     python-dateutil
@@ -30,12 +29,12 @@ let
     zipp
   ]);
 
-  # System dependencies (required for GIS and data processing)
+  # System dependencies for GIS and Python
   systemPackages = with pkgs; [
-    git      # Version control
-    gdal     # Geospatial data library
-    proj     # Coordinate system transformations
-    geos     # Geometric operations support
+    git
+    gdal
+    proj
+    geos
     pythonEnv
   ];
 in
@@ -43,7 +42,8 @@ pkgs.mkShell {
   buildInputs = systemPackages;
 
   shellHook = ''
-    echo "🔹 Reproducible Nix Environment Ready! 🔹"
-    echo "💡 Run your pipeline with: python main.py"
+    echo "🔹 Nix Environment Ready!"
+    echo "Installing pyogrio via pip..."
+    pip install --no-cache-dir pyogrio
   '';
 }
