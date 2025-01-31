@@ -72,8 +72,3 @@ This will:
 - **Preprocessing Outputs**: Available in the `results_pre/` directory, including visualizations of the preprocessed data and statistical summaries.
 - **LMF Results**: Available in the `results_lmf/` directory, including detected trees and visualizations.
 
----
-
-### Notes
-
-- The results generated from running the pipeline can be used for further visualization, analysis, or reporting.
