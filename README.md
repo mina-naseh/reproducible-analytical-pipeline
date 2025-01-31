@@ -29,23 +29,36 @@ REPRODUCIBLE-ANALYTICAL-PIPELINE/
 │   ├── lmf_utils.py         # Utilities for Local Maxima Filtering
 │   └── pre_visualization.py # Visualization utilities for preprocessing
 │
+├── tests/ 
+│   └── test_lmf_utils.py  # testing some of the main lmf functions
+│
 ├── main.py                 # Main script to run the entire pipeline
 │
 ├── README.md               # Project README
 └── requirements.txt        # Python dependencies
 ```
 
+
+
+### **✅ Updated README Instructions**
+```markdown
 ## Instructions
 
-### 1. Clone the Repository
+### **1. Clone the Repository**
+First, download the repository to your local machine:
 
 ```bash
-git clone https://github.com/yourusername/lidar-point-transformer.git
-cd lidar-point-transformer
+git clone https://github.com/minanaseh/reproducible-analytical-pipeline.git
+cd reproducible-analytical-pipeline
 ```
 
-### 2. Install Dependencies
+---
 
+## **Running the Pipeline with Python**
+
+If you want to run the pipeline in a **Python environment**, follow these steps.
+
+### **2. Install Dependencies**
 Set up your Python environment and install required packages:
 
 ```bash
@@ -54,39 +67,55 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. Run the Entire Pipeline (Python Environment)
-
-Run the `main.py` script to execute all steps of the pipeline sequentially, including preprocessing, Local Maxima Filtering (LMF), and evaluation:
+### **3. Run the Entire Pipeline (Python)**
+Execute the pipeline by running:
 
 ```bash
 python main.py
 ```
 
 This will:
+- Preprocess ALS data and save results in `results/pre_visualization/`.
+- Run Local Maxima Filtering (LMF) and save results in `results/lmf/`.
 
-1. Preprocess ALS data and create `results/pre_visualization/`. It also generates visualizations of preprocessed data.
-2. Perform Local Maxima Filtering (LMF) and save results in `results/lmf/`.
+---
 
-### 4. Running with Docker
+## **Running the Pipeline with Docker**
+If you prefer to use **Docker** (recommended for reproducibility), follow these steps.
 
-Alternatively, you can run the pipeline using Docker for better reproducibility:
+### **2. Pull the Latest Docker Image (Recommended)**
+If you want to use the latest version, you can pull it directly from **Docker Hub**:
 
-#### Build the Docker Image:
+```bash
+docker pull minanaseh/reproducible-analytical-pipeline:latest
+```
+
+### **3. Run the Pipeline in a Docker Container**
+```bash
+docker run -v $(pwd)/results:/app/results minanaseh/reproducible-analytical-pipeline:latest
+```
+
+This will:
+- Process ALS data and generate results inside `results/pre_visualization/`.
+- Run Local Maxima Filtering (LMF) and save results inside `results/lmf/`.
+
+### **(Optional) Build the Docker Image Locally**
+If you have modified the code and want to **build the image locally**, run:
+
 ```bash
 docker build -t my_pipeline .
 ```
 
-#### Run the Pipeline in a Docker Container:
+Then, run it using:
 ```bash
 docker run -v $(pwd)/results:/app/results my_pipeline
 ```
 
+---
+
+
+
+
+
 This ensures that all output files are saved to `results/`.
-
-### 5. Results
-
-- **Preprocessing Outputs**: Available in the `results/pre_visualization/` directory, including visualizations of the preprocessed data and statistical summaries.
-- **LMF Results**: Available in the `results/lmf/` directory, including detected trees and visualizations.
-
-This setup ensures a fully reproducible analytical pipeline that can be executed in a local Python environment or inside a Docker container.
 
