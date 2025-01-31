@@ -13,7 +13,7 @@ Ideally, the raw data should be handled by the user like [here](https://github.c
 ## Repository Structure
 
 ```plaintext
-LIDAR-POINT-TRANSFORMER/
+REPRODUCIBLE-ANALYTICAL-PIPELINE/
 │
 ├── data/
 │   ├── als/                # Raw ALS LiDAR data (downloaded from Kaggle)

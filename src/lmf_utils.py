@@ -47,11 +47,14 @@ def local_maxima_filter(cloud, window_size):
         # Find neighbors within the specified window size
         neighbor_indices = tree.query_ball_point(point, window_size)
         highest_neighbor = neighbor_indices[cloud[neighbor_indices, 2].argmax()]
-        seen_mask[neighbor_indices] = True
-        seen_mask[highest_neighbor] = False
+        # seen_mask[neighbor_indices] = True
+        # seen_mask[highest_neighbor] = False
+        seen_mask[neighbor_indices] = True  # Mark all neighbors as seen
+        seen_mask[i] = False  # Ensure the highest point is added to local maxima only once
 
-        if i == highest_neighbor:
+        if i == highest_neighbor:  # Only add the highest point
             local_maxima.append(i)
+
 
     logger.info(f"Detected {len(local_maxima)} local maxima (trees).")
     return cloud[local_maxima]
@@ -95,6 +98,8 @@ def transform_ground_truth(ground_truth):
     ground_truth["geometry.y"] = ground_truth.geometry.y
     return ground_truth[["geometry.x", "geometry.y", "height"]].to_numpy()
 
+
+
 def crop_by_other(points: np.ndarray, other: np.ndarray) -> np.ndarray:
     """
     Crop points by the convex hull of another set of points.
@@ -106,11 +111,18 @@ def crop_by_other(points: np.ndarray, other: np.ndarray) -> np.ndarray:
     Returns:
     - np.ndarray: Cropped points.
     """
-    hull = scipy.spatial.ConvexHull(other[:, :2])  # Convex hull on the X, Y coordinates
-    vertex_points = hull.points[hull.vertices]  # Extract the vertices of the hull
-    delaunay = scipy.spatial.Delaunay(vertex_points)  # Create Delaunay triangulation
-    within_hull = delaunay.find_simplex(points[:, :2]) >= 0  # Check points within the hull
-    return points[within_hull]
+    if other.shape[0] < 3:  # Convex hull requires at least 3 non-collinear points
+        return np.array([])  # Return empty array if there aren't enough points
+
+    try:
+        hull = scipy.spatial.ConvexHull(other[:, :2])  # Convex hull on X, Y
+        vertex_points = hull.points[hull.vertices]  # Extract vertices
+        delaunay = scipy.spatial.Delaunay(vertex_points)  # Triangulation
+        within_hull = delaunay.find_simplex(points[:, :2]) >= 0
+        return points[within_hull]
+    except scipy.spatial.qhull.QhullError:
+        return np.array([])  # Handle collinear points by returning an empty array
+
 
 
 def match_candidates(
