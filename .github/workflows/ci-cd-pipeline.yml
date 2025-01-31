@@ -3,10 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main  # Triggers the workflow on push to main branch
-  pull_request:
-    branches:
-      - main
+      - main  # Runs on every push to main
 
 jobs:
   build-and-push:
@@ -30,14 +27,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: your-dockerhub-username/my-pipeline:latest
-
-  run-pipeline:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Pull and Run Docker Container
-        run: |
-          docker pull your-dockerhub-username/my-pipeline:latest
-          docker run --rm your-dockerhub-username/my-pipeline
+          tags: minanaseh/reproducible-analytical-pipeline:latest
