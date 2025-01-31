@@ -18,43 +18,31 @@ logger = logging.getLogger(__name__)
 
 
 def local_maxima_filter(cloud, window_size):
-    """
-    Detects local maxima in the point cloud with a fixed window size.
-
-    Parameters:
-    - cloud (numpy.ndarray): Preprocessed vegetation point cloud (X, Y, Z).
-    - window_size (float): Radius of the neighborhood to consider for local maxima.
-
-    Returns:
-    - numpy.ndarray: Detected tree locations and heights (X, Y, Z).
-    """
     if not isinstance(cloud, np.ndarray):
         raise TypeError(f"Cloud needs to be a numpy array, not {type(cloud)}")
     if cloud.size == 0:
         logger.warning("Point cloud is empty. Returning empty array.")
         return np.array([])
 
-    # Initialize KDTree for neighborhood queries
-    tree = scipy.spatial.KDTree(data=cloud)
-    seen_mask = np.zeros(cloud.shape[0], dtype=bool)
+    # Sort points by Z in descending order and track original indices
+    sorted_indices = np.argsort(-cloud[:, 2])
+    sorted_cloud = cloud[sorted_indices]
+    original_indices = np.arange(cloud.shape[0])[sorted_indices]
+
+    tree = scipy.spatial.KDTree(data=sorted_cloud[:, :2])  # Use X, Y for spatial queries
+    seen_mask = np.zeros(sorted_cloud.shape[0], dtype=bool)
     local_maxima = []
 
-    # Detect local maxima
-    for i, point in enumerate(cloud):
+    for i in range(sorted_cloud.shape[0]):
         if seen_mask[i]:
             continue
 
-        # Find neighbors within the specified window size
-        neighbor_indices = tree.query_ball_point(point, window_size)
-        highest_neighbor = neighbor_indices[cloud[neighbor_indices, 2].argmax()]
-        # seen_mask[neighbor_indices] = True
-        # seen_mask[highest_neighbor] = False
+        # Add the current point (highest unprocessed) to maxima
+        local_maxima.append(original_indices[i])
+
+        # Find all neighbors within the window size
+        neighbor_indices = tree.query_ball_point(sorted_cloud[i, :2], window_size)
         seen_mask[neighbor_indices] = True  # Mark all neighbors as seen
-        seen_mask[i] = False  # Ensure the highest point is added to local maxima only once
-
-        if i == highest_neighbor:  # Only add the highest point
-            local_maxima.append(i)
-
 
     logger.info(f"Detected {len(local_maxima)} local maxima (trees).")
     return cloud[local_maxima]
@@ -112,17 +100,23 @@ def crop_by_other(points: np.ndarray, other: np.ndarray) -> np.ndarray:
     - np.ndarray: Cropped points.
     """
     if other.shape[0] < 3:  # Convex hull requires at least 3 non-collinear points
-        return np.array([])  # Return empty array if there aren't enough points
+        logger.warning("Not enough points for a convex hull. Returning empty array.")
+        return np.empty((0, points.shape[1]))  # Ensure correct shape
 
     try:
+        # Compute the convex hull
         hull = scipy.spatial.ConvexHull(other[:, :2])  # Convex hull on X, Y
         vertex_points = hull.points[hull.vertices]  # Extract vertices
-        delaunay = scipy.spatial.Delaunay(vertex_points)  # Triangulation
-        within_hull = delaunay.find_simplex(points[:, :2]) >= 0
-        return points[within_hull]
-    except scipy.spatial.qhull.QhullError:
-        return np.array([])  # Handle collinear points by returning an empty array
 
+        # Perform Delaunay triangulation for cropping
+        delaunay = scipy.spatial.Delaunay(vertex_points)
+        within_hull = delaunay.find_simplex(points[:, :2]) >= 0
+
+        return points[within_hull]  # Return only points inside the hull
+
+    except scipy.spatial.QhullError:
+        logger.warning("Convex hull computation failed (collinear points). Returning empty array.")
+        return np.empty((0, points.shape[1]))  # Return an empty array with correct shape
 
 
 def match_candidates(
