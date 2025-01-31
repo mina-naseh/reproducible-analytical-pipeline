@@ -40,8 +40,6 @@ REPRODUCIBLE-ANALYTICAL-PIPELINE/
 
 
 
-### **✅ Updated README Instructions**
-```markdown
 ## Instructions
 
 ### **1. Clone the Repository**
